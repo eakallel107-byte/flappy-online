@@ -31,6 +31,8 @@ input{padding:12px;font-size:20px;text-align:center;border:3px solid #333;border
 #finalScore{font-size:30px;color:#f7d51d;margin:10px;font-weight:bold}
 #players{position:absolute;top:80px;right:10px;color:#fff;font-size:14px;text-align:right;text-shadow:2px 2px 0 #000;z-index:9}
 .hidden{display:none!important}
+.muteBtn{position:absolute;top:15px;right:15px;width:46px;height:46px;padding:0;font-size:22px;background:rgba(255,255,255,.3);border:2px solid #fff;border-radius:50%;color:#fff;box-shadow:none;z-index:30;cursor:pointer;margin:0}
+.muteBtn:active{transform:scale(.9);box-shadow:none}
 </style>
 </head>
 <body>
@@ -38,15 +40,15 @@ input{padding:12px;font-size:20px;text-align:center;border:3px solid #333;border
 <canvas id="cv"></canvas>
 <div id="score" class="hidden">0</div>
 <div id="players"></div>
+<button id="musicBtn" class="muteBtn">🔊</button>
+<button id="sfxBtn" class="muteBtn hidden">🔊</button>
 
-<!-- شاشة البداية الرئيسية -->
 <div class="scr" id="mainMenu">
   <h1>🐦 Flappy Bird</h1>
   <button id="btnSingle">🎮 لعب فردي</button>
   <button id="btnOnline" class="btn2">🌐 Play Online</button>
 </div>
 
-<!-- شاشة أونلاين -->
 <div class="scr hidden" id="onlineMenu">
   <h1>🌐 أونلاين</h1>
   <button id="btnCreate" class="btn2">➕ Create Room</button>
@@ -54,7 +56,6 @@ input{padding:12px;font-size:20px;text-align:center;border:3px solid #333;border
   <button id="btnBack" style="background:#999;box-shadow:0 5px 0 #555">← رجوع</button>
 </div>
 
-<!-- شاشة إنشاء غرفة -->
 <div class="scr hidden" id="createScreen">
   <h1>➕ غرفة جديدة</h1>
   <p>شارك هذا الكود مع صاحبك:</p>
@@ -64,7 +65,6 @@ input{padding:12px;font-size:20px;text-align:center;border:3px solid #333;border
   <button id="btnCancel1" style="background:#999;box-shadow:0 5px 0 #555">← إلغاء</button>
 </div>
 
-<!-- شاشة انضمام لغرفة -->
 <div class="scr hidden" id="joinScreen">
   <h1>🔗 انضم لغرفة</h1>
   <p>اكتب الكود:</p>
@@ -74,7 +74,6 @@ input{padding:12px;font-size:20px;text-align:center;border:3px solid #333;border
   <button id="btnCancel2" style="background:#999;box-shadow:0 5px 0 #555">← رجوع</button>
 </div>
 
-<!-- شاشة الانتظار -->
 <div class="scr hidden" id="waitScreen">
   <h1>⏳ غرفة <span id="waitCode"></span></h1>
   <div id="roomInfo2"></div>
@@ -82,7 +81,6 @@ input{padding:12px;font-size:20px;text-align:center;border:3px solid #333;border
   <button id="btnLeave" style="background:#999;box-shadow:0 5px 0 #555">← خروج</button>
 </div>
 
-<!-- شاشة النهاية -->
 <div class="scr hidden" id="gameOver">
   <h1>انتهت اللعبة!</h1>
   <div id="finalScore">النقاط: 0</div>
@@ -100,22 +98,89 @@ input{padding:12px;font-size:20px;text-align:center;border:3px solid #333;border
 
 /* ===== المتغيرات ===== */
 var socket=null;
-var cv,ctx,scoreEl,playersEl;
+var cv,ctx,scoreEl,playersEl,musicBtn,sfxBtn;
 var W=0,H=0;
 var bird,pipes=[],score=0,fr=0,gx=0;
 var G=0.5,J=-8,PW=70,PG=170,PS=2.5;
-var mode='menu'; // menu, single, online
+var mode='menu';
 var run=false,over=false;
 var lastTime=0,acc=0,STEP=1000/60;
 var myCode=null,myId=null;
 var remotePlayers=[],remotePipes=[];
-var readyState=0; // 0=not ready, 1=ready
 var best=0;
+
+/* ===== الأصوات ===== */
+var bgMusic=null;
+var musicOn=true;
+var sfxOn=true;
+var actx=null;
 
 function $(id){return document.getElementById(id)}
 function show(id){var e=$(id);if(e)e.classList.remove('hidden')}
 function hide(id){var e=$(id);if(e)e.classList.add('hidden')}
 function hideAll(){var s=document.querySelectorAll('.scr');for(var i=0;i<s.length;i++)s[i].classList.add('hidden')}
+
+function initAudio(){
+  try{
+    if(!actx){var AC=window.AudioContext||window.webkitAudioContext;if(AC)actx=new AC()}
+    if(actx&&actx.state==='suspended')actx.resume();
+  }catch(e){}
+}
+
+function beep(f,d,t){
+  if(!sfxOn||!actx)return;
+  try{
+    var o=actx.createOscillator(),g=actx.createGain();
+    o.type=t||'square';
+    o.frequency.value=f;
+    g.gain.setValueAtTime(0.08,actx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001,actx.currentTime+d);
+    o.connect(g);g.connect(actx.destination);
+    o.start();o.stop(actx.currentTime+d);
+  }catch(e){}
+}
+
+function sJump(){beep(600,0.08,'square')}
+function sScore(){beep(900,0.1,'sine')}
+function sHit(){beep(200,0.15,'sawtooth')}
+function sDie(){beep(120,0.4,'sawtooth')}
+
+function startMusic(){
+  if(bgMusic&&!bgMusic.paused)return;
+  try{
+    if(!bgMusic){
+      bgMusic=new Audio('/mfcc-retro-arcade-game-music-297305.mp3');
+      bgMusic.loop=true;
+      bgMusic.volume=0.4;
+    }
+    bgMusic.muted=!musicOn;
+    var p=bgMusic.play();
+    if(p&&p.catch)p.catch(function(){});
+  }catch(e){}
+}
+
+function stopMusic(){
+  if(bgMusic){try{bgMusic.pause();bgMusic.currentTime=0}catch(e){}}
+}
+
+function toggleMusic(){
+  musicOn=!musicOn;
+  if(bgMusic)bgMusic.muted=!musicOn;
+  updateMusicBtn();
+}
+
+function toggleSfx(){
+  sfxOn=!sfxOn;
+  updateSfxBtn();
+}
+
+function updateMusicBtn(){
+  if(musicBtn)musicBtn.textContent=musicOn?'🔊':'🔇';
+}
+
+function updateSfxBtn(){
+  if(sfxBtn)sfxBtn.textContent=sfxOn?'🔊':'🔇';
+}
 
 /* ===== أفضل نتيجة ===== */
 try{best=parseInt(localStorage.getItem('fb_best')||'0',10)||0}catch(e){best=0}
@@ -140,7 +205,6 @@ function reset(){
   if(scoreEl)scoreEl.textContent='0';
 }
 
-/* ===== توليد أنبوب (فردي) ===== */
 function spawnSingle(){
   var mn=H*0.12,mx=H-PG-H*0.18;
   if(mx<mn)mx=mn+50;
@@ -148,7 +212,6 @@ function spawnSingle(){
   pipes.push({x:W+20,th:th,sc:false});
 }
 
-/* ===== رسم الطائر ===== */
 function drawBird(x,y,sz,rot,alpha,color){
   ctx.save();
   ctx.globalAlpha=alpha||1;
@@ -169,7 +232,6 @@ function drawBird(x,y,sz,rot,alpha,color){
   ctx.restore();
 }
 
-/* ===== رسم الأنابيب ===== */
 function drawPipes(pipeList,alpha){
   ctx.globalAlpha=alpha||1;
   for(var i=0;i<pipeList.length;i++){
@@ -199,7 +261,6 @@ function drawPipes(pipeList,alpha){
   ctx.globalAlpha=1;
 }
 
-/* ===== الأرض ===== */
 function drawGround(){
   ctx.fillStyle='#ded895';ctx.fillRect(0,H-40,W,40);
   ctx.fillStyle='#a8b545';ctx.fillRect(0,H-40,W,8);
@@ -210,7 +271,6 @@ function drawGround(){
   }
 }
 
-/* ===== السماء والسحاب ===== */
 function drawSky(){
   var sky=ctx.createLinearGradient(0,0,0,H);
   sky.addColorStop(0,'#4ec0e0');
@@ -231,7 +291,6 @@ function drawCloud(x,y,s){
   ctx.fill();
 }
 
-/* ===== الفردي: التحديث ===== */
 function updSingle(){
   if(!run||over||!bird||!bird.alive)return;
   fr++;gx-=PS;
@@ -246,6 +305,7 @@ function updSingle(){
     if(!p.sc&&p.x+PW<bird.x){
       p.sc=true;score++;
       if(scoreEl)scoreEl.textContent=score;
+      sScore();
     }
     if(p.x+PW<-10){pipes.splice(i,1);continue}
     var bl=bird.x-bird.sz/3,br=bird.x+bird.sz/3;
@@ -256,7 +316,6 @@ function updSingle(){
   if(bird.y-bird.sz/2<=0){bird.y=bird.sz/2;bird.v=0}
 }
 
-/* ===== الفردي: الرسم ===== */
 function drawSingle(){
   drawSky();
   drawPipes(pipes.map(function(p){return {x:p.x/W,top:p.th/H,gap:PG/H}}),1);
@@ -264,25 +323,20 @@ function drawSingle(){
   if(bird)drawBird(bird.x,bird.y,bird.sz,bird.rot,1,'#f7d51d');
 }
 
-/* ===== الأونلاين: الرسم ===== */
 function drawOnline(){
   drawSky();
-  // أنابيب مشتركة (نفسها للجميع)
   if(remotePipes.length){
     drawPipes(remotePipes,1);
   }
   drawGround();
-  // اللاعبون الآخرون (شفافون)
   for(var i=0;i<remotePlayers.length;i++){
     var rp=remotePlayers[i];
     if(rp.id===myId)continue;
     drawBird(rp.x*W,rp.y*H,bird?bird.sz:30,0,0.45,'#ffffff');
   }
-  // أنا
   if(bird)drawBird(bird.x,bird.y,bird.sz,bird.rot,1,'#f7d51d');
 }
 
-/* ===== الحلقة الرئيسية ===== */
 function loop(now){
   requestAnimationFrame(loop);
   if(!now)now=performance.now?performance.now():Date.now();
@@ -297,13 +351,24 @@ function loop(now){
   else if(mode==='online')drawOnline();
 }
 
-/* ===== اللعب الفردي ===== */
+function showMenuBtns(){
+  if(musicBtn){musicBtn.classList.remove('hidden');updateMusicBtn()}
+  if(sfxBtn)sfxBtn.classList.add('hidden');
+}
+function showGameBtns(){
+  if(musicBtn)musicBtn.classList.add('hidden');
+  if(sfxBtn){sfxBtn.classList.remove('hidden');updateSfxBtn()}
+}
+
 function startSingle(){
   hideAll();
   mode='single';run=true;over=false;
   reset();
   if(scoreEl){scoreEl.classList.remove('hidden');scoreEl.textContent='0'}
   if(playersEl)playersEl.innerHTML='';
+  showGameBtns();
+  stopMusic();
+  initAudio();
   var cvEl=$('cv');
   if(cvEl){cvEl.onmousedown=onTap;cvEl.ontouchstart=onTap}
 }
@@ -311,20 +376,24 @@ function endSingle(){
   if(over)return;
   over=true;run=false;
   if(bird)bird.alive=false;
+  sHit();
+  setTimeout(sDie,150);
   if(score>best){best=score;saveBest()}
   var fsc=$('finalScore');if(fsc)fsc.textContent='النقاط: '+score;
   var bst=$('best');if(bst)bst.textContent='أفضل نتيجة: '+best;
   hideAll();show('gameOver');
+  if(musicBtn)musicBtn.classList.remove('hidden');
+  if(sfxBtn)sfxBtn.classList.add('hidden');
+  startMusic();
 }
 
-/* ===== اللمس ===== */
 function onTap(e){
   if(e&&e.preventDefault)e.preventDefault();
-  if(mode==='single'&&run&&!over&&bird){bird.v=J}
-  if(mode==='online'&&run&&myCode&&socket){socket.emit('jump',myCode)}
+  initAudio();
+  if(mode==='single'&&run&&!over&&bird){bird.v=J;sJump()}
+  if(mode==='online'&&run&&myCode&&socket){socket.emit('jump',myCode);sJump()}
 }
 
-/* ===== الأزرار ===== */
 function bindBtns(){
   var b1=$('btnSingle');if(b1)b1.onclick=function(){startSingle()};
   var b2=$('btnOnline');if(b2)b2.onclick=function(){openOnline()};
@@ -338,24 +407,24 @@ function bindBtns(){
   var b10=$('btnReady2');if(b10)b10.onclick=function(){sendReady()};
   var b11=$('btnLeave');if(b11)b11.onclick=function(){leaveRoom()};
   var b12=$('btnRestart');if(b12)b12.onclick=function(){startSingle()};
-  var b13=$('btnMainMenu');if(b13)b13.onclick=function(){hideAll();show('mainMenu');mode='menu'};
+  var b13=$('btnMainMenu');if(b13)b13.onclick=function(){hideAll();show('mainMenu');mode='menu';showMenuBtns();startMusic()};
+  if(musicBtn)musicBtn.onclick=function(e){if(e)e.preventDefault();toggleMusic()};
+  if(sfxBtn)sfxBtn.onclick=function(e){if(e)e.preventDefault();toggleSfx()};
 }
 
-/* ===== أونلاين: فتح القائمة ===== */
 function openOnline(){
   if(!socket)initSocket();
   hideAll();show('onlineMenu');
 }
 
-/* ===== إنشاء غرفة ===== */
 function createRoom(){
   if(!socket)initSocket();
   socket.emit('createRoom','لاعب 1');
 }
 
-/* ===== الانضمام ===== */
 function joinRoom(){
-  var code=$('inputCode').value.trim().toUpperCase();
+  var inp=$('inputCode');
+  var code=inp?inp.value.trim().toUpperCase():'';
   if(code.length!==4){
     var er=$('error');if(er)er.textContent='الكود لازم 4 أحرف';
     return;
@@ -364,19 +433,18 @@ function joinRoom(){
   socket.emit('joinRoom',{code:code,name:'لاعب 2'});
 }
 
-/* ===== ready ===== */
 function sendReady(){
   if(socket&&myCode)socket.emit('ready',myCode);
 }
 
-/* ===== مغادرة الغرفة ===== */
 function leaveRoom(){
   if(socket&&myCode)socket.emit('leaveRoom',myCode);
   myCode=null;mode='menu';run=false;
   hideAll();show('mainMenu');
+  showMenuBtns();
+  startMusic();
 }
 
-/* ===== Socket.IO ===== */
 function initSocket(){
   if(typeof io==='undefined')return;
   socket=io();
@@ -408,9 +476,11 @@ function initSocket(){
     if(scoreEl){scoreEl.classList.remove('hidden');scoreEl.textContent='0'}
     mode='online';run=true;over=false;
     score=0;fr=0;
-    // إعادة ضبط الطائر
     rs();
     bird={x:W*0.28,y:H*0.45,sz:Math.max(24,Math.min(34,W*0.09)),v:0,rot:0,alive:true};
+    showGameBtns();
+    stopMusic();
+    initAudio();
     var cvEl=$('cv');
     if(cvEl){cvEl.onmousedown=onTap;cvEl.ontouchstart=onTap}
   });
@@ -418,23 +488,29 @@ function initSocket(){
   socket.on('state',function(data){
     remotePlayers=data.players||[];
     remotePipes=data.pipes||[];
-    // تحديث طياري من السيرفر
     for(var i=0;i<remotePlayers.length;i++){
       if(remotePlayers[i].id===myId&&bird){
         bird.y=remotePlayers[i].y*H;
         bird.v=remotePlayers[i].v*H*30;
+        var prevScore=score;
         score=remotePlayers[i].score||0;
         if(scoreEl)scoreEl.textContent=score;
+        if(score>prevScore)sScore();
         if(remotePlayers[i].dead&&!over){
           over=true;run=false;
+          sHit();setTimeout(sDie,150);
           if(score>best){best=score;saveBest()}
           var fsc=$('finalScore');if(fsc)fsc.textContent='النقاط: '+score;
           var bst=$('best');if(bst)bst.textContent='أفضل نتيجة: '+best;
-          setTimeout(function(){hideAll();show('gameOver')},600);
+          setTimeout(function(){
+            hideAll();show('gameOver');
+            if(musicBtn)musicBtn.classList.remove('hidden');
+            if(sfxBtn)sfxBtn.classList.add('hidden');
+            startMusic();
+          },600);
         }
       }
     }
-    // عرض معلومات اللاعبين
     if(playersEl){
       var html='';
       for(var j=0;j<remotePlayers.length;j++){
@@ -449,6 +525,8 @@ function initSocket(){
   socket.on('playerLeft',function(){
     myCode=null;mode='menu';run=false;
     hideAll();show('mainMenu');
+    showMenuBtns();
+    startMusic();
   });
 
   socket.on('errorMsg',function(msg){
@@ -456,22 +534,33 @@ function initSocket(){
   });
 }
 
-/* ===== التهيئة ===== */
 function init(){
   cv=$('cv');ctx=cv?cv.getContext('2d'):null;
   if(!cv||!ctx)return;
   scoreEl=$('score');
   playersEl=$('players');
+  musicBtn=$('musicBtn');
+  sfxBtn=$('sfxBtn');
   rs();
   reset();
   bindBtns();
   hideAll();show('mainMenu');
+  showMenuBtns();
   lastTime=performance.now?performance.now():Date.now();
   requestAnimationFrame(loop);
   window.addEventListener('resize',rs,false);
   window.addEventListener('orientationchange',function(){setTimeout(rs,250)},false);
-  // تهيئة Socket مسبقاً
   if(typeof io!=='undefined'){try{initSocket()}catch(e){}}
+  document.addEventListener('touchstart',function once(){
+    initAudio();
+    startMusic();
+    document.removeEventListener('touchstart',once);
+  },false);
+  document.addEventListener('mousedown',function once(){
+    initAudio();
+    startMusic();
+    document.removeEventListener('mousedown',once);
+  },false);
 }
 
 if(document.readyState==='loading'){
