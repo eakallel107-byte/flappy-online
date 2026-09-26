@@ -3,36 +3,31 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="theme-color" content="#70c5ce">
 <title>Flappy Bird Online</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
-html,body{width:100%;height:100%;overflow:hidden;background:#222;font-family:Arial,sans-serif;touch-action:none;position:fixed;inset:0;overscroll-behavior:none}
+html,body{width:100%;height:100%;overflow:hidden;background:#222;font-family:Arial,sans-serif;touch-action:none;position:fixed;inset:0}
 #c{position:absolute;inset:0;display:flex;justify-content:center;align-items:center}
 #game{position:relative;width:100%;height:100%;max-width:500px;overflow:hidden;background:#70c5ce}
 canvas{display:block;width:100%;height:100%}
 #score{position:absolute;top:20px;left:50%;transform:translateX(-50%);font-size:48px;font-weight:bold;color:#fff;text-shadow:3px 3px 0 #000;pointer-events:none;z-index:10}
-.scr{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;align-items:center;background:rgba(0,0,0,.7);color:#fff;text-align:center;z-index:20;padding:20px;overflow-y:auto}
+.scr{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;align-items:center;background:rgba(0,0,0,.7);color:#fff;text-align:center;z-index:20;padding:20px}
 h1{font-size:30px;margin-bottom:15px;text-shadow:3px 3px 0 #000}
-h2{font-size:22px;margin-bottom:12px;text-shadow:2px 2px 0 #000}
-p{font-size:16px;margin-bottom:18px;line-height:1.6;text-shadow:2px 2px 0 #000}
-button{padding:14px 35px;font-size:19px;font-weight:bold;background:linear-gradient(180deg,#ffe45c,#f7d51d);color:#333;border:4px solid #333;border-radius:12px;cursor:pointer;box-shadow:0 5px 0 #b39b00;margin:8px;font-family:Arial;-webkit-appearance:none;transition:transform .05s}
+p{font-size:16px;margin-bottom:18px;text-shadow:2px 2px 0 #000}
+button{padding:14px 35px;font-size:19px;font-weight:bold;background:linear-gradient(180deg,#ffe45c,#f7d51d);color:#333;border:4px solid #333;border-radius:12px;box-shadow:0 5px 0 #b39b00;margin:8px;font-family:Arial;-webkit-appearance:none}
 button:active{transform:translateY(4px);box-shadow:0 1px 0 #b39b00}
 .btn2{background:linear-gradient(180deg,#8ed4ff,#4ea8e0);box-shadow:0 5px 0 #2a6b99;color:#fff}
 .btn3{background:linear-gradient(180deg,#ff8a8a,#e04040);box-shadow:0 5px 0 #992020;color:#fff}
 input{padding:12px;font-size:20px;text-align:center;border:3px solid #333;border-radius:10px;width:200px;margin:8px;font-weight:bold;text-transform:uppercase;letter-spacing:3px}
-#code{font-size:40px;font-weight:bold;color:#f7d51d;letter-spacing:8px;background:#222;padding:15px 25px;border-radius:12px;border:3px solid #f7d51d;margin:15px;text-shadow:0 0 15px #f7d51d}
+#code{font-size:40px;font-weight:bold;color:#f7d51d;letter-spacing:8px;background:#222;padding:15px 25px;border-radius:12px;border:3px solid #f7d51d;margin:15px}
 #roomInfo{font-size:18px;margin:15px;line-height:1.8}
 .ready{color:#4eff4e;font-weight:bold}
 .waiting{color:#ffaa00}
 #error{color:#ff5555;font-size:16px;margin:10px;min-height:20px}
-#best{font-size:16px;color:#fff;margin:8px}
 #finalScore{font-size:30px;color:#f7d51d;margin:10px;font-weight:bold}
 #players{position:absolute;top:80px;right:10px;color:#fff;font-size:14px;text-align:right;text-shadow:2px 2px 0 #000;z-index:9}
 .hidden{display:none!important}
-.muteBtn{position:absolute;top:15px;right:15px;width:46px;height:46px;padding:0;font-size:22px;background:rgba(255,255,255,.3);border:2px solid #fff;border-radius:50%;color:#fff;box-shadow:none;z-index:30;cursor:pointer;margin:0}
-.muteBtn:active{transform:scale(.9);box-shadow:none}
+.muteBtn{position:absolute;top:15px;right:15px;width:46px;height:46px;padding:0;font-size:22px;background:rgba(255,255,255,.3);border:2px solid #fff;border-radius:50%;color:#fff;box-shadow:none;z-index:30}
 </style>
 </head>
 <body>
@@ -84,19 +79,17 @@ input{padding:12px;font-size:20px;text-align:center;border:3px solid #333;border
 <div class="scr hidden" id="gameOver">
   <h1>انتهت اللعبة!</h1>
   <div id="finalScore">النقاط: 0</div>
-  <div id="best">أفضل نتيجة: 0</div>
   <button id="btnRestart" class="btn2">🔄 العب مرة أخرى</button>
   <button id="btnMainMenu" style="background:#999;box-shadow:0 5px 0 #555">🏠 القائمة الرئيسية</button>
 </div>
 
 </div></div>
 
-<script src="/socket.io/socket.io.js"></script>
+<script src="https://flappy-online-jh44.onrender.com/socket.io/socket.io.js"></script>
 <script>
 (function(){
 "use strict";
 
-/* ===== المتغيرات ===== */
 var socket=null;
 var cv,ctx,scoreEl,playersEl,musicBtn,sfxBtn;
 var W=0,H=0;
@@ -109,84 +102,11 @@ var myCode=null,myId=null;
 var remotePlayers=[],remotePipes=[];
 var best=0;
 
-/* ===== الأصوات ===== */
-var bgMusic=null;
-var musicOn=true;
-var sfxOn=true;
-var actx=null;
-
 function $(id){return document.getElementById(id)}
 function show(id){var e=$(id);if(e)e.classList.remove('hidden')}
 function hide(id){var e=$(id);if(e)e.classList.add('hidden')}
 function hideAll(){var s=document.querySelectorAll('.scr');for(var i=0;i<s.length;i++)s[i].classList.add('hidden')}
 
-function initAudio(){
-  try{
-    if(!actx){var AC=window.AudioContext||window.webkitAudioContext;if(AC)actx=new AC()}
-    if(actx&&actx.state==='suspended')actx.resume();
-  }catch(e){}
-}
-
-function beep(f,d,t){
-  if(!sfxOn||!actx)return;
-  try{
-    var o=actx.createOscillator(),g=actx.createGain();
-    o.type=t||'square';
-    o.frequency.value=f;
-    g.gain.setValueAtTime(0.08,actx.currentTime);
-    g.gain.exponentialRampToValueAtTime(0.001,actx.currentTime+d);
-    o.connect(g);g.connect(actx.destination);
-    o.start();o.stop(actx.currentTime+d);
-  }catch(e){}
-}
-
-function sJump(){beep(600,0.08,'square')}
-function sScore(){beep(900,0.1,'sine')}
-function sHit(){beep(200,0.15,'sawtooth')}
-function sDie(){beep(120,0.4,'sawtooth')}
-
-function startMusic(){
-  if(bgMusic&&!bgMusic.paused)return;
-  try{
-    if(!bgMusic){
-      bgMusic=new Audio('/mfcc-retro-arcade-game-music-297305.mp3');
-      bgMusic.loop=true;
-      bgMusic.volume=0.4;
-    }
-    bgMusic.muted=!musicOn;
-    var p=bgMusic.play();
-    if(p&&p.catch)p.catch(function(){});
-  }catch(e){}
-}
-
-function stopMusic(){
-  if(bgMusic){try{bgMusic.pause();bgMusic.currentTime=0}catch(e){}}
-}
-
-function toggleMusic(){
-  musicOn=!musicOn;
-  if(bgMusic)bgMusic.muted=!musicOn;
-  updateMusicBtn();
-}
-
-function toggleSfx(){
-  sfxOn=!sfxOn;
-  updateSfxBtn();
-}
-
-function updateMusicBtn(){
-  if(musicBtn)musicBtn.textContent=musicOn?'🔊':'🔇';
-}
-
-function updateSfxBtn(){
-  if(sfxBtn)sfxBtn.textContent=sfxOn?'🔊':'🔇';
-}
-
-/* ===== أفضل نتيجة ===== */
-try{best=parseInt(localStorage.getItem('fb_best')||'0',10)||0}catch(e){best=0}
-function saveBest(){try{localStorage.setItem('fb_best',String(best))}catch(e){}}
-
-/* ===== حجم Canvas ===== */
 function rs(){
   if(!cv)return;
   var r=cv.getBoundingClientRect();
@@ -196,7 +116,6 @@ function rs(){
   W=cv.width;H=cv.height;
 }
 
-/* ===== إعادة الضبط ===== */
 function reset(){
   rs();
   bird={x:W*0.28,y:H*0.45,sz:Math.max(24,Math.min(34,W*0.09)),v:0,rot:0,alive:true};
@@ -220,9 +139,9 @@ function drawBird(x,y,sz,rot,alpha,color){
   ctx.fillStyle=color||'#f7d51d';
   ctx.beginPath();ctx.arc(0,0,sz/2,0,Math.PI*2);ctx.fill();
   ctx.strokeStyle='#333';ctx.lineWidth=2;ctx.stroke();
-  ctx.fillStyle='rgba(255,255,255,.9)';
+  ctx.fillStyle='#fff';
   ctx.beginPath();ctx.arc(sz/4,-sz/6,sz/5,0,Math.PI*2);ctx.fill();
-  ctx.strokeStyle='#333';ctx.stroke();
+  ctx.stroke();
   ctx.fillStyle='#000';
   ctx.beginPath();ctx.arc(sz/4+2,-sz/6,sz/10,0,Math.PI*2);ctx.fill();
   ctx.fillStyle='#f77d1d';
@@ -232,31 +151,27 @@ function drawBird(x,y,sz,rot,alpha,color){
   ctx.restore();
 }
 
-function drawPipes(pipeList,alpha){
+function drawPipes(list,alpha){
   ctx.globalAlpha=alpha||1;
-  for(var i=0;i<pipeList.length;i++){
-    var p=pipeList[i];
-    var px=p.x*W;
-    var ptop=p.top*H;
-    var pgap=p.gap*H;
-    var pwid=PW;
-    var g=ctx.createLinearGradient(px,0,px+pwid,0);
+  for(var i=0;i<list.length;i++){
+    var p=list[i];
+    var px=p.x*W,ptop=p.top*H,pgap=p.gap*H;
+    var g=ctx.createLinearGradient(px,0,px+PW,0);
     g.addColorStop(0,'#6fc96f');g.addColorStop(0.5,'#5eb45e');g.addColorStop(1,'#4a9a4a');
     ctx.fillStyle=g;
-    ctx.fillRect(px,0,pwid,ptop);
+    ctx.fillRect(px,0,PW,ptop);
     ctx.strokeStyle='#2d6b2d';ctx.lineWidth=3;
-    ctx.strokeRect(px,0,pwid,ptop);
+    ctx.strokeRect(px,0,PW,ptop);
     ctx.fillStyle='#7ddc7d';
-    ctx.fillRect(px-5,ptop-30,pwid+10,30);
-    ctx.strokeRect(px-5,ptop-30,pwid+10,30);
+    ctx.fillRect(px-5,ptop-30,PW+10,30);
+    ctx.strokeRect(px-5,ptop-30,PW+10,30);
     var by=ptop+pgap;
-    var bh=H-by;
     ctx.fillStyle=g;
-    ctx.fillRect(px,by,pwid,bh);
-    ctx.strokeRect(px,by,pwid,bh);
+    ctx.fillRect(px,by,PW,H-by);
+    ctx.strokeRect(px,by,PW,H-by);
     ctx.fillStyle='#7ddc7d';
-    ctx.fillRect(px-5,by,pwid+10,30);
-    ctx.strokeRect(px-5,by,pwid+10,30);
+    ctx.fillRect(px-5,by,PW+10,30);
+    ctx.strokeRect(px-5,by,PW+10,30);
   }
   ctx.globalAlpha=1;
 }
@@ -264,31 +179,13 @@ function drawPipes(pipeList,alpha){
 function drawGround(){
   ctx.fillStyle='#ded895';ctx.fillRect(0,H-40,W,40);
   ctx.fillStyle='#a8b545';ctx.fillRect(0,H-40,W,8);
-  ctx.strokeStyle='#c4b96b';ctx.lineWidth=2;
-  for(var i=-50;i<W+50;i+=40){
-    var x=((i+gx)%(W+80))-40;
-    ctx.beginPath();ctx.moveTo(x,H-20);ctx.lineTo(x+20,H-20);ctx.stroke();
-  }
 }
 
 function drawSky(){
   var sky=ctx.createLinearGradient(0,0,0,H);
-  sky.addColorStop(0,'#4ec0e0');
-  sky.addColorStop(1,'#70c5ce');
+  sky.addColorStop(0,'#4ec0e0');sky.addColorStop(1,'#70c5ce');
   ctx.fillStyle=sky;
   ctx.fillRect(0,0,W,H);
-  ctx.fillStyle='rgba(255,255,255,.85)';
-  var co=(fr*0.3)%(W+200);
-  drawCloud(W-co+50,80,40);
-  drawCloud(W-co-150,140,30);
-  drawCloud(W-co-350,60,35);
-}
-function drawCloud(x,y,s){
-  ctx.beginPath();
-  ctx.arc(x,y,s,0,Math.PI*2);
-  ctx.arc(x+s,y-s/3,s*0.8,0,Math.PI*2);
-  ctx.arc(x+s*1.8,y,s*0.9,0,Math.PI*2);
-  ctx.fill();
 }
 
 function updSingle(){
@@ -302,11 +199,7 @@ function updSingle(){
   for(var i=pipes.length-1;i>=0;i--){
     var p=pipes[i];
     p.x-=PS;
-    if(!p.sc&&p.x+PW<bird.x){
-      p.sc=true;score++;
-      if(scoreEl)scoreEl.textContent=score;
-      sScore();
-    }
+    if(!p.sc&&p.x+PW<bird.x){p.sc=true;score++;if(scoreEl)scoreEl.textContent=score}
     if(p.x+PW<-10){pipes.splice(i,1);continue}
     var bl=bird.x-bird.sz/3,br=bird.x+bird.sz/3;
     var bt=bird.y-bird.sz/3,bb=bird.y+bird.sz/3;
@@ -325,14 +218,15 @@ function drawSingle(){
 
 function drawOnline(){
   drawSky();
-  if(remotePipes.length){
-    drawPipes(remotePipes,1);
-  }
+  if(remotePipes.length)drawPipes(remotePipes,1);
   drawGround();
   for(var i=0;i<remotePlayers.length;i++){
     var rp=remotePlayers[i];
-    if(rp.id===myId)continue;
-    drawBird(rp.x*W,rp.y*H,bird?bird.sz:30,0,0.45,'#ffffff');
+    if(rp.id===myId){
+      if(bird){bird.y=rp.y*H;bird.alive=!rp.dead}
+    } else {
+      drawBird(rp.x*W,rp.y*H,bird?bird.sz:30,0,0.5,'#ff6b6b');
+    }
   }
   if(bird)drawBird(bird.x,bird.y,bird.sz,bird.rot,1,'#f7d51d');
 }
@@ -352,123 +246,104 @@ function loop(now){
 }
 
 function showMenuBtns(){
-  if(musicBtn){musicBtn.classList.remove('hidden');updateMusicBtn()}
+  if(musicBtn){musicBtn.classList.remove('hidden')}
   if(sfxBtn)sfxBtn.classList.add('hidden');
 }
 function showGameBtns(){
   if(musicBtn)musicBtn.classList.add('hidden');
-  if(sfxBtn){sfxBtn.classList.remove('hidden');updateSfxBtn()}
+  if(sfxBtn)sfxBtn.classList.remove('hidden');
 }
 
 function startSingle(){
+  if(socket){try{socket.disconnect()}catch(e){}socket=null}
+  myCode=null;myId=null;remotePlayers=[];remotePipes=[];
+  if(playersEl)playersEl.innerHTML='';
   hideAll();
   mode='single';run=true;over=false;
   reset();
   if(scoreEl){scoreEl.classList.remove('hidden');scoreEl.textContent='0'}
-  if(playersEl)playersEl.innerHTML='';
   showGameBtns();
-  stopMusic();
-  initAudio();
   var cvEl=$('cv');
   if(cvEl){cvEl.onmousedown=onTap;cvEl.ontouchstart=onTap}
 }
+
 function endSingle(){
   if(over)return;
   over=true;run=false;
   if(bird)bird.alive=false;
-  sHit();
-  setTimeout(sDie,150);
-  if(score>best){best=score;saveBest()}
-  var fsc=$('finalScore');if(fsc)fsc.textContent='النقاط: '+score;
-  var bst=$('best');if(bst)bst.textContent='أفضل نتيجة: '+best;
+  if(score>best){best=score}
+  if($('finalScore'))$('finalScore').textContent='النقاط: '+score;
   hideAll();show('gameOver');
   if(musicBtn)musicBtn.classList.remove('hidden');
   if(sfxBtn)sfxBtn.classList.add('hidden');
-  startMusic();
 }
 
 function onTap(e){
   if(e&&e.preventDefault)e.preventDefault();
-  initAudio();
-  if(mode==='single'&&run&&!over&&bird){bird.v=J;sJump()}
-  if(mode==='online'&&run&&myCode&&socket){socket.emit('jump',myCode);sJump()}
+  if(mode==='single'&&run&&!over&&bird){bird.v=J}
+  if(mode==='online'&&run&&myCode&&socket){socket.emit('jump',myCode)}
 }
 
 function bindBtns(){
-  var b1=$('btnSingle');if(b1)b1.onclick=function(){startSingle()};
-  var b2=$('btnOnline');if(b2)b2.onclick=function(){openOnline()};
-  var b3=$('btnBack');if(b3)b3.onclick=function(){hideAll();show('mainMenu')};
-  var b4=$('btnCreate');if(b4)b4.onclick=function(){createRoom()};
-  var b5=$('btnJoin');if(b5)b5.onclick=function(){hideAll();show('joinScreen')};
-  var b6=$('btnJoinGo');if(b6)b6.onclick=function(){joinRoom()};
-  var b7=$('btnCancel1');if(b7)b7.onclick=function(){leaveRoom()};
-  var b8=$('btnCancel2');if(b8)b8.onclick=function(){hideAll();show('onlineMenu')};
-  var b9=$('btnReady1');if(b9)b9.onclick=function(){sendReady()};
-  var b10=$('btnReady2');if(b10)b10.onclick=function(){sendReady()};
-  var b11=$('btnLeave');if(b11)b11.onclick=function(){leaveRoom()};
-  var b12=$('btnRestart');if(b12)b12.onclick=function(){startSingle()};
-  var b13=$('btnMainMenu');if(b13)b13.onclick=function(){hideAll();show('mainMenu');mode='menu';showMenuBtns();startMusic()};
-  if(musicBtn)musicBtn.onclick=function(e){if(e)e.preventDefault();toggleMusic()};
-  if(sfxBtn)sfxBtn.onclick=function(e){if(e)e.preventDefault();toggleSfx()};
-}
-
-function openOnline(){
-  if(!socket)initSocket();
-  hideAll();show('onlineMenu');
-}
-
-function createRoom(){
-  if(!socket)initSocket();
-  socket.emit('createRoom','لاعب 1');
-}
-
-function joinRoom(){
-  var inp=$('inputCode');
-  var code=inp?inp.value.trim().toUpperCase():'';
-  if(code.length!==4){
-    var er=$('error');if(er)er.textContent='الكود لازم 4 أحرف';
-    return;
-  }
-  if(!socket)initSocket();
-  socket.emit('joinRoom',{code:code,name:'لاعب 2'});
-}
-
-function sendReady(){
-  if(socket&&myCode)socket.emit('ready',myCode);
+  if($('btnSingle'))$('btnSingle').onclick=startSingle;
+  if($('btnOnline'))$('btnOnline').onclick=function(){if(!socket)initSocket();hideAll();show('onlineMenu')};
+  if($('btnBack'))$('btnBack').onclick=function(){hideAll();show('mainMenu')};
+  if($('btnCreate'))$('btnCreate').onclick=function(){if(!socket)initSocket();socket.emit('createRoom','لاعب 1')};
+  if($('btnJoin'))$('btnJoin').onclick=function(){hideAll();show('joinScreen')};
+  if($('btnJoinGo'))$('btnJoinGo').onclick=function(){
+    var inp=$('inputCode');
+    var code=inp?inp.value.trim().toUpperCase():'';
+    if(code.length!==4){if($('error'))$('error').textContent='4 أحرف';return}
+    if(!socket)initSocket();
+    socket.emit('joinRoom',{code:code,name:'لاعب 2'});
+  };
+  if($('btnCancel1'))$('btnCancel1').onclick=leaveRoom;
+  if($('btnCancel2'))$('btnCancel2').onclick=function(){hideAll();show('onlineMenu')};
+  if($('btnReady1'))$('btnReady1').onclick=function(){if(socket&&myCode)socket.emit('ready',myCode)};
+  if($('btnReady2'))$('btnReady2').onclick=function(){if(socket&&myCode)socket.emit('ready',myCode)};
+  if($('btnLeave'))$('btnLeave').onclick=leaveRoom;
+  if($('btnRestart'))$('btnRestart').onclick=startSingle;
+  if($('btnMainMenu'))$('btnMainMenu').onclick=function(){hideAll();show('mainMenu');mode='menu'};
+  if(musicBtn)musicBtn.onclick=function(){};
+  if(sfxBtn)sfxBtn.onclick=function(){};
 }
 
 function leaveRoom(){
   if(socket&&myCode)socket.emit('leaveRoom',myCode);
-  myCode=null;mode='menu';run=false;
+  if(socket){try{socket.disconnect()}catch(e){}socket=null}
+  myCode=null;myId=null;mode='menu';run=false;over=false;
+  remotePlayers=[];remotePipes=[];
+  if(playersEl)playersEl.innerHTML='';
+  if(scoreEl)scoreEl.classList.add('hidden');
+  if(bird){bird.y=H*0.45;bird.v=0;bird.rot=0;bird.alive=true}
   hideAll();show('mainMenu');
   showMenuBtns();
-  startMusic();
 }
 
 function initSocket(){
   if(typeof io==='undefined')return;
-  socket=io();
+  socket=io('https://flappy-online-jh44.onrender.com');
 
   socket.on('roomCreated',function(data){
     myCode=data.code;myId=data.myId;
-    var ce=$('code');if(ce)ce.textContent=data.code;
-    var ri=$('roomInfo');if(ri)ri.innerHTML='في انتظار صاحبك...';
+    if($('code'))$('code').textContent=data.code;
+    if($('roomInfo'))$('roomInfo').innerHTML='في انتظار صاحبك...';
     hideAll();show('createScreen');
   });
 
   socket.on('roomJoined',function(data){
     myCode=data.code;myId=data.myId;
-    var wc=$('waitCode');if(wc)wc.textContent=data.code;
+    if($('waitCode'))$('waitCode').textContent=data.code;
     hideAll();show('waitScreen');
   });
 
   socket.on('playerList',function(players){
     var html='';
     for(var i=0;i<players.length;i++){
-      html+='<div>'+players[i].name+' '+(players[i].ready?'<span class="ready">✅ جاهز</span>':'<span class="waiting">⏳ ينتظر</span>')+'</div>';
+      html+='<div>'+players[i].name+' '+(players[i].ready?'✅':'⏳')+'</div>';
     }
-    var ri=$('roomInfo');if(ri)ri.innerHTML=html;
-    var ri2=$('roomInfo2');if(ri2)ri2.innerHTML=html;
+    if($('roomInfo'))$('roomInfo').innerHTML=html;
+    if($('roomInfo2'))$('roomInfo2').innerHTML=html;
   });
 
   socket.on('gameStart',function(){
@@ -479,8 +354,6 @@ function initSocket(){
     rs();
     bird={x:W*0.28,y:H*0.45,sz:Math.max(24,Math.min(34,W*0.09)),v:0,rot:0,alive:true};
     showGameBtns();
-    stopMusic();
-    initAudio();
     var cvEl=$('cv');
     if(cvEl){cvEl.onmousedown=onTap;cvEl.ontouchstart=onTap}
   });
@@ -488,49 +361,35 @@ function initSocket(){
   socket.on('state',function(data){
     remotePlayers=data.players||[];
     remotePipes=data.pipes||[];
-    for(var i=0;i<remotePlayers.length;i++){
-      if(remotePlayers[i].id===myId&&bird){
-        bird.y=remotePlayers[i].y*H;
-        bird.v=remotePlayers[i].v*H*30;
-        var prevScore=score;
-        score=remotePlayers[i].score||0;
-        if(scoreEl)scoreEl.textContent=score;
-        if(score>prevScore)sScore();
-        if(remotePlayers[i].dead&&!over){
-          over=true;run=false;
-          sHit();setTimeout(sDie,150);
-          if(score>best){best=score;saveBest()}
-          var fsc=$('finalScore');if(fsc)fsc.textContent='النقاط: '+score;
-          var bst=$('best');if(bst)bst.textContent='أفضل نتيجة: '+best;
-          setTimeout(function(){
-            hideAll();show('gameOver');
-            if(musicBtn)musicBtn.classList.remove('hidden');
-            if(sfxBtn)sfxBtn.classList.add('hidden');
-            startMusic();
-          },600);
-        }
-      }
-    }
     if(playersEl){
       var html='';
       for(var j=0;j<remotePlayers.length;j++){
         var p=remotePlayers[j];
-        var who=(p.id===myId)?'أنت':'صاحبك';
-        html+='<div>'+who+': '+(p.score||0)+(p.dead?' 💀':'')+'</div>';
+        html+='<div>'+(p.id===myId?'أنت':'صاحبك')+': '+(p.score||0)+(p.dead?' 💀':'')+'</div>';
       }
       playersEl.innerHTML=html;
+    }
+    // موت اللاعب
+    for(var i=0;i<remotePlayers.length;i++){
+      if(remotePlayers[i].id===myId&&remotePlayers[i].dead&&!over){
+        over=true;run=false;
+        if(score>best)best=score;
+        if($('finalScore'))$('finalScore').textContent='النقاط: '+score;
+        setTimeout(function(){
+          hideAll();show('gameOver');
+          if(musicBtn)musicBtn.classList.remove('hidden');
+          if(sfxBtn)sfxBtn.classList.add('hidden');
+        },600);
+      }
     }
   });
 
   socket.on('playerLeft',function(){
-    myCode=null;mode='menu';run=false;
-    hideAll();show('mainMenu');
-    showMenuBtns();
-    startMusic();
+    leaveRoom();
   });
 
   socket.on('errorMsg',function(msg){
-    var er=$('error');if(er)er.textContent=msg;
+    if($('error'))$('error').textContent=msg;
   });
 }
 
@@ -551,16 +410,6 @@ function init(){
   window.addEventListener('resize',rs,false);
   window.addEventListener('orientationchange',function(){setTimeout(rs,250)},false);
   if(typeof io!=='undefined'){try{initSocket()}catch(e){}}
-  document.addEventListener('touchstart',function once(){
-    initAudio();
-    startMusic();
-    document.removeEventListener('touchstart',once);
-  },false);
-  document.addEventListener('mousedown',function once(){
-    initAudio();
-    startMusic();
-    document.removeEventListener('mousedown',once);
-  },false);
 }
 
 if(document.readyState==='loading'){
